@@ -21,6 +21,11 @@ def makeH(H,E,nstep,n,muij,En):
         for j in range(nstep*n):
             if((np.floor(i/n)==np.floor(j/n))):
                 H[i,j]=(i==j)*En[i%n]-muij[int(i%n),int(j%n)]*E[int(np.floor(i/n))] 
+def makeHf(H,E,nstep,n,muij,En):
+    for i in range(nstep*n):
+        for j in range(nstep*n):
+            if((np.floor(i/n)==np.floor(j/n))):
+                H[i,j]=(i==j)*En[i%n]-muij[int(i%n),int(j%n)]*E[int(np.floor(i/n))] 
 
 def getEfield(Rho,nstep,n):
     ef= torch.zeros(nstep)
