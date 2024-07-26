@@ -3,13 +3,14 @@ import torch
 import scipy.constants as c 
 
 
+
 def Efield(t,P,wl,pw,t0):
     E= np.zeros(len(t),complex) #initialize efield 
     r = 50.0e-6 #set focal spot size
     RR= 79.8e6  #set rep rate   
     for i,Pi in enumerate(P):
         Psi = Pi/(np.pi*r**2)/RR #energetic flux per pulse joules/m^2  
-        E0 = np.sqrt(Psi*c.c*c.mu_0)#calculated envelope field in V/m  
+        E0 = np.sqrt(Psi*c.c*c.mu_0/pw)#calculated envelope field in V/m  
         om = np.pi*2*c.c/wl[i]
         sig = pw/(2*np.sqrt(2*np.log(2)))
         print("exciting frequency :",om)
@@ -48,10 +49,10 @@ from tqdm import tqdm
 ts =  -3e-12  #s time window start of measurement
 te =  3e-12  #s time window end of measurment 
 dt = .1e-15 #time resolution  
-P = [.002] #mW power
-wl = [830.0e-9] #m wavelength of exciting pulse
+P = [.002,.002] #W power
+wl = [1630.1e-9,830.0e-9] #m wavelength of exciting pulse
 pw =  80e-15 #fs pulse width of excitation (fwhm)  
-t0 = [0] # time delay for each pulse 
+t0 = [-.01e-12,0] # time delay for each pulse 
 
 
 #create time space and efield
@@ -61,7 +62,7 @@ E = Efield(t,P,wl,pw,t0)# efield in V/m
 #create excited state parameters 
 ax = 13e-9#nm exciton bohr radius
 muii = 0.0 #occupation coupling 
-Nx =1.0e32 #available excitons 
+Nx =1.0e16*1e6 #available excitons excitons/m^3 
 mu13 = Nx*ax*c.elementary_charge #exciton dipole moment 
 print('couping strength',mu13*np.max(E))
 mu12= Nx*ax*c.elementary_charge #exciton dipole moment 
@@ -70,9 +71,9 @@ muij= np.array([[muii , mu12, mu13],
                 [mu12 , muii, mu23],
                 [mu13 , mu23, muii]],dtype=np.complex128)#,
 
-Tii=100.0e-12#lifetime decay time 
-T12=600.0e-15#dephasing decay time 
-T13=700.0e-15#dephasing decay time
+Tii=10.0e-12#lifetime decay time 
+T12=700.0e-15#dephasing decay time 
+T13=2700.0e-15#dephasing decay time
 T23=700.0e-15 #interstate dephasing decay time
 Tij = np.array([[Tii , T12, T13],
                 [T12 , Tii, T23],
@@ -80,8 +81,8 @@ Tij = np.array([[Tii , T12, T13],
 
 n = 3 #number of states available
 nstep = 1
-Egap = np.pi*2.0*366.0e12
-Ebound = np.pi*2.0*3.0e12
+Egap = np.pi*2.0*183.0e12
+Ebound = -np.pi*2.0*361.0e12
 En =[0,Egap,Egap-Ebound]
 
 fig,ax = plt.subplots(4)
@@ -171,20 +172,20 @@ for i in tqdm(range(len(t))):
     a[11]+=e-s
     
     s= ti.time()
-    Oc[i] = rho[0,0]-rho[1,1]-rho[2,2]
+    Oc[i] = rho[1,1]+rho[2,2]
     e= ti.time()
     a[12]+=e-s
 ea = ti.time()    
 print(a)
 print(np.sum(a))
 print(ea-sa)
-ax[2].plot(t,P.real,label='Total Polarization')
-ax[2].plot(t,P1.real,label='X1 Polarization')
+#ax[2].plot(t,P.real,label='Total Polarization')
+#ax[2].plot(t,P1.real,label='X1 Polarization')
 ax[2].plot(t,P2.real,label='X2 Polarization')
-ax[2].plot(t,P3.real,label='X2-X1 Polarization')
+ax[2].plot(t,P3.real,label='X21 Polarization')
 ax[2].legend()
 
 #ax[2].plot(t,E[0]*1e-42)
-ax[3].plot(t,1.0-Oc)
+ax[3].plot(t,Oc)
 #ax[3].set_yscale('log')
 plt.show()
